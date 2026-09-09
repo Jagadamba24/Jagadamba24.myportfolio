@@ -486,12 +486,21 @@ function setupDemoWidget(type) {
    ========================================================================== */
 function initResumeModal() {
   const resumeModal = document.getElementById('resume-modal');
+  const resumeIframe = document.getElementById('resume-modal-iframe');
   const closeBtn = document.getElementById('resume-modal-close-btn');
   const triggers = document.querySelectorAll('.view-resume-trigger');
 
   if (!resumeModal) return;
 
   function openResume() {
+    // Only lazy-load PDF into the iframe on desktop/tablet to prevent automatic mobile download prompts
+    if (window.innerWidth > 768 && resumeIframe) {
+      const currentSrc = resumeIframe.getAttribute('src');
+      const targetSrc = resumeIframe.getAttribute('data-src') || 'assets/resume.pdf#toolbar=1&navpanes=0';
+      if (!currentSrc || currentSrc === 'about:blank' || currentSrc === '') {
+        resumeIframe.setAttribute('src', targetSrc);
+      }
+    }
     resumeModal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
@@ -504,11 +513,12 @@ function initResumeModal() {
   triggers.forEach(btn => {
     btn.addEventListener('click', (e) => {
       // On desktop / tablet screens (> 768px), open embedded modal preview
-      // On small mobile screens (<= 768px), allow default behavior to open PDF in a new browser tab
       if (window.innerWidth > 768) {
         e.preventDefault();
         openResume();
       }
+      // On mobile phones (<= 768px), allow default link behavior to open/download PDF,
+      // ensuring the phone only triggers "Open file / Save file" when the user taps "View Resume"!
     });
   });
 
