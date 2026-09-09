@@ -5,7 +5,8 @@
    ========================================================================== */
 
 /* --- CSS Reset & Custom Properties --- */
-:root {
+:root,
+[data-theme="dark"] {
   /* Color Palette - Dark Obsidian (Default) */
   --bg-primary: #080c14;
   --bg-secondary: #0f172a;
@@ -561,6 +562,76 @@ a {
   grid-template-columns: 1.18fr 0.92fr;
   gap: 56px;
   align-items: center;
+}
+
+/* Hero Centered Layout (Photo in Middle) */
+.hero-center-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero-intro-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.hero-intro-header .hero-title {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.hero-intro-header .hero-roles-container {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.hero-visual-center {
+  margin-bottom: 34px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-visual-center .portrait-card-wrapper {
+  max-width: 350px;
+  margin: 0 auto;
+}
+
+.hero-details-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.hero-details-center .hero-description {
+  max-width: 740px;
+  margin: 0 auto 24px;
+  text-align: center;
+  font-size: 1.06rem;
+  line-height: 1.85;
+}
+
+.hero-details-center .recruiter-quick-hub {
+  justify-content: center;
+  margin: 0 auto 28px;
+  max-width: 580px;
+}
+
+.hero-details-center .hero-cta-group {
+  justify-content: center;
+  margin: 0 auto;
 }
 
 .hero-content {
@@ -2262,7 +2333,36 @@ textarea.form-input {
     grid-template-columns: 1fr;
   }
   .portrait-card {
-    height: 420px;
+    height: 380px;
+  }
+  .hero-visual-center .portrait-card-wrapper {
+    max-width: 290px;
+  }
+  .floating-badge {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+  .badge-icon-wrap {
+    width: 28px;
+    height: 28px;
+  }
+  .badge-title {
+    font-size: 0.78rem;
+  }
+  .badge-subtitle {
+    font-size: 0.68rem;
+  }
+  .badge-top-right {
+    right: -4px;
+    top: 2%;
+  }
+  .badge-bottom-left {
+    left: -4px;
+    bottom: 6%;
+  }
+  .badge-bottom-right {
+    right: 0;
+    bottom: -10px;
   }
   .resume-modal-card {
     height: 84vh;

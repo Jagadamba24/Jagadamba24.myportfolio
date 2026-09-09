@@ -23,13 +23,13 @@ function initThemeToggle() {
   const themeToggleBtn = document.getElementById('theme-toggle');
   const root = document.documentElement;
 
+  // Enforce dark mode as the primary default
   const savedTheme = localStorage.getItem('jb_portfolio_theme');
-  if (savedTheme) {
-    root.setAttribute('data-theme', savedTheme);
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+  if (savedTheme === 'light') {
     root.setAttribute('data-theme', 'light');
   } else {
     root.setAttribute('data-theme', 'dark');
+    localStorage.setItem('jb_portfolio_theme', 'dark');
   }
 
   if (themeToggleBtn) {
