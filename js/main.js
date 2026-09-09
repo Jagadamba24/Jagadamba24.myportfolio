@@ -1,190 +1,256 @@
 /**
  * JAGADAMBA B - PORTFOLIO INTERACTIVITY SCRIPT
+ * Modern, accessible, zero-dependency client logic.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTheme();
-  initNavigation();
-  initProjectFiltering();
-  initProjectModals();
+  initThemeToggle();
+  initMobileNav();
+  initTypewriter();
+  initSkillsFilter();
+  initProjectsFilter();
+  initProjectModal();
   initResumeModal();
-  initInteractiveSimulations();
-  initContactInteractions();
+  initClipboardCopy();
+  initContactForm();
   initScrollEffects();
 });
 
-/* =========================================================
-   1. THEME SWITCHER (Dark / Light)
-   ========================================================= */
-function initTheme() {
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const themeIcon = document.getElementById('theme-icon');
-  
-  // Check localStorage or preferred color scheme
+/* ==========================================================================
+   1. Theme Toggle (Dark / Light Mode)
+   ========================================================================== */
+function initThemeToggle() {
+  const themeToggleBtn = document.getElementById('theme-toggle');
+  const root = document.documentElement;
+
   const savedTheme = localStorage.getItem('jb_portfolio_theme');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
-  const currentTheme = savedTheme || (prefersDark ? 'dark' : 'dark'); // default to dark
-  setTheme(currentTheme);
+  if (savedTheme) {
+    root.setAttribute('data-theme', savedTheme);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+    root.setAttribute('data-theme', 'light');
+  } else {
+    root.setAttribute('data-theme', 'dark');
+  }
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
-      const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-      const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
-      setTheme(newTheme);
+      const currentTheme = root.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      root.setAttribute('data-theme', newTheme);
       localStorage.setItem('jb_portfolio_theme', newTheme);
+      showToast(`Switched to ${newTheme} mode`);
     });
   }
+}
 
-  function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    if (themeIcon) {
-      themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-      themeToggleBtn.setAttribute('title', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+/* ==========================================================================
+   2. Mobile Navigation Drawer
+   ========================================================================== */
+function initMobileNav() {
+  const toggleBtn = document.getElementById('mobile-menu-toggle');
+  const drawer = document.getElementById('mobile-drawer');
+  const navLinks = document.querySelectorAll('.mobile-nav-link');
+
+  if (!toggleBtn || !drawer) return;
+
+  function toggleDrawer(open) {
+    const isOpen = open !== undefined ? open : !drawer.classList.contains('open');
+    if (isOpen) {
+      drawer.classList.add('open');
+      toggleBtn.classList.add('active');
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      drawer.setAttribute('aria-hidden', 'false');
+    } else {
+      drawer.classList.remove('open');
+      toggleBtn.classList.remove('active');
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      drawer.setAttribute('aria-hidden', 'true');
     }
   }
+
+  toggleBtn.addEventListener('click', () => toggleDrawer());
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => toggleDrawer(false));
+  });
+
+  document.addEventListener('click', (e) => {
+    if (drawer.classList.contains('open') && !drawer.contains(e.target) && !toggleBtn.contains(e.target)) {
+      toggleDrawer(false);
+    }
+  });
 }
 
-/* =========================================================
-   2. MOBILE NAVIGATION & ACTIVE LINK TRACKING
-   ========================================================= */
-function initNavigation() {
-  const mobileToggleBtn = document.getElementById('mobile-toggle-btn');
-  const navLinks = document.getElementById('nav-links');
-  const links = document.querySelectorAll('.nav-link');
+/* ==========================================================================
+   3. Typewriter Effect
+   ========================================================================== */
+function initTypewriter() {
+  const target = document.getElementById('typewriter-text');
+  if (!target) return;
 
-  if (mobileToggleBtn && navLinks) {
-    mobileToggleBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('nav-open');
-      const isOpen = navLinks.classList.contains('nav-open');
-      mobileToggleBtn.setAttribute('aria-expanded', isOpen);
-      mobileToggleBtn.textContent = isOpen ? '✕' : '☰';
-    });
+  const roles = [
+    "AI & Machine Learning Enthusiast",
+    "Data Analytics Explorer",
+    "Predictive Modeling Developer",
+    "Power BI & BI Solutions Analyst",
+    "Python & SQL Programmer"
+  ];
 
-    links.forEach(link => {
-      link.addEventListener('click', () => {
-        navLinks.classList.remove('nav-open');
-        mobileToggleBtn.textContent = '☰';
-      });
-    });
+  let roleIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+  const typeSpeed = 80;
+  const deleteSpeed = 40;
+  const pauseDelay = 1800;
+
+  function type() {
+    const currentRole = roles[roleIndex];
+
+    if (isDeleting) {
+      target.textContent = currentRole.substring(0, charIndex - 1);
+      charIndex--;
+    } else {
+      target.textContent = currentRole.substring(0, charIndex + 1);
+      charIndex++;
+    }
+
+    let delay = isDeleting ? deleteSpeed : typeSpeed;
+
+    if (!isDeleting && charIndex === currentRole.length) {
+      delay = pauseDelay;
+      isDeleting = true;
+    } else if (isDeleting && charIndex === 0) {
+      isDeleting = false;
+      roleIndex = (roleIndex + 1) % roles.length;
+      delay = 400;
+    }
+
+    setTimeout(type, delay);
   }
 
-  // Active section observer
-  const sections = document.querySelectorAll('section[id]');
-  const observerOptions = {
-    root: null,
-    rootMargin: '-20% 0px -70% 0px',
-    threshold: 0
-  };
-
-  const sectionObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.getAttribute('id');
-        links.forEach(link => {
-          if (link.getAttribute('href') === `#${id}`) {
-            link.classList.add('active');
-          } else {
-            link.classList.remove('active');
-          }
-        });
-      }
-    });
-  }, observerOptions);
-
-  sections.forEach(sec => sectionObserver.observe(sec));
+  setTimeout(type, 500);
 }
 
-/* =========================================================
-   3. PROJECT FILTERING
-   ========================================================= */
-function initProjectFiltering() {
-  const filterBtns = document.querySelectorAll('.filter-btn');
-  const projectCards = document.querySelectorAll('.project-card');
+/* ==========================================================================
+   4. Skills Category Filter
+   ========================================================================== */
+function initSkillsFilter() {
+  const tabs = document.querySelectorAll('.skill-tab');
+  const cards = document.querySelectorAll('.skill-card');
 
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
 
-      const filterValue = btn.getAttribute('data-filter');
+      const filter = tab.getAttribute('data-filter');
 
-      projectCards.forEach(card => {
+      cards.forEach(card => {
         const category = card.getAttribute('data-category');
-        if (filterValue === 'all' || category === filterValue) {
-          card.style.display = 'flex';
+        if (filter === 'all' || category === filter) {
+          card.classList.remove('hidden');
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(8px)';
           setTimeout(() => {
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
           }, 50);
         } else {
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(15px)';
-          setTimeout(() => {
-            card.style.display = 'none';
-          }, 250);
+          card.classList.add('hidden');
         }
       });
     });
   });
 }
 
-/* =========================================================
-   4. PROJECT MODALS DATA & BEHAVIOR
-   ========================================================= */
+/* ==========================================================================
+   5. Projects Category Filter
+   ========================================================================== */
+function initProjectsFilter() {
+  const tabs = document.querySelectorAll('.project-tab');
+  const cards = document.querySelectorAll('.project-card');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const filter = tab.getAttribute('data-filter');
+
+      cards.forEach(card => {
+        const category = card.getAttribute('data-category');
+        if (filter === 'all' || category === filter) {
+          card.style.display = 'flex';
+          card.style.opacity = '0';
+          card.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          }, 50);
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+}
+
+/* ==========================================================================
+   6. Project Case Studies & Interactive Simulators
+   ========================================================================== */
 const PROJECT_DETAILS = {
   atm: {
-    title: "ATM Cash Demand Forecasting Using ML",
-    category: "Machine Learning & Forecasting",
     icon: "🏧",
-    description: "A machine learning pipeline to accurately predict daily ATM cash requirements using time-series features, seasonal demand shifts, holiday spikes, and geographic transaction clustering.",
-    problem: "Financial institutions face high operational penalties for both ATM cash dry-outs and unnecessary idle capital locked in cash cassettes.",
-    solution: "Trained predictive regression models on historical transaction datasets. Engineered dynamic features (day of week, holiday indicators, proximity to pay-days, seasonal trends) to generate reliable cash dispensing forecasts.",
-    outcomes: [
-      "Reduced forecast error margins and helped prevent cash run-outs during peak paydays.",
-      "Optimized replenishment dispatch cycles, reducing logistics overhead.",
-      "Enabled actionable analytics for branch managers through forecast confidence bands."
+    title: "ATM Cash Demand Forecasting Using ML",
+    category: "Machine Learning & Predictive Analytics",
+    tags: ["Python", "Scikit-learn", "Pandas", "Time Series", "Regression"],
+    problem: "Banks face huge costs when storing excess idle cash in ATMs, yet understocking triggers disastrous cash-out experiences for customers, especially during holidays and weekends.",
+    solution: "Built a predictive time-series regression pipeline analyzing multi-year withdrawal trends, day-of-week cyclical variations, and regional holiday calendars to generate high-accuracy cash demand estimates.",
+    architecture: [
+      "Data Preprocessing: Missing-value imputation, outlier removal, and cyclical sin/cos calendar transforms with Pandas.",
+      "Model Exploration: Comparative benchmarking of Linear Regression, Random Forest Regressor, and Gradient Boosting.",
+      "Deployment Simulation: What-if demand forecasting based on user-selected day of week and nearby banking holiday markers."
     ],
-    techStack: ["Python", "Pandas", "Scikit-learn", "NumPy", "Matplotlib", "Seaborn"],
-    interactiveType: "atm-slider"
+    interactiveType: "atm",
+    github: "https://github.com/Jagadamba24"
   },
   bitcoin: {
-    title: "Bitcoin Transaction Verification & Double-Spending Prevention",
-    category: "Blockchain & Cryptography",
     icon: "⛓️",
-    description: "A cryptographic transaction verification and ledger integrity model preventing double-spending vulnerabilities through UTXO validation and hash chain consensus logic.",
-    problem: "Digital peer-to-peer currencies face the existential risk of malicious actors attempting to duplicate digital tokens or double-spend the same unspent transaction output.",
-    solution: "Constructed an algorithmic verification model using SHA-256 cryptographic hashing, digital signature validation, and historical transaction graph traversal to ensure transactions cannot be spent more than once.",
-    outcomes: [
-      "Deterministic verification of transaction chains back to genesis or validated blocks.",
-      "Instant detection and rejection of conflicting double-spend candidate transactions.",
-      "Deep understanding of distributed ledger protocols, cryptographic signing, and consensus rules."
+    title: "Bitcoin Transaction Verification & Double-Spend Prevention",
+    category: "Blockchain Architecture & Cryptographic Verification",
+    tags: ["Blockchain", "SHA-256", "Cryptography", "Python", "Consensus"],
+    problem: "Digital tokens risk being duplicated and spent across two separate entities simultaneously if a distributed ledger does not validate unspent transaction output (UTXO) ownership.",
+    solution: "Engineered a protocol-level simulator that signs transactions with asymmetric keys, checks UTXO pool legitimacy, and executes consensus hashing to reject double-spending attempts.",
+    architecture: [
+      "Cryptographic Engine: SHA-256 block hashing with nonce computation and proof-of-work simulation.",
+      "UTXO State Ledger: In-memory memory-pool state manager ensuring every output can only be referenced once.",
+      "Network Validation: Instant invalidation of conflicting parallel broadcast attempts."
     ],
-    techStack: ["Blockchain", "Bitcoin Architecture", "Cryptography", "SHA-256", "Python", "Data Structures"],
-    interactiveType: "crypto-verify"
+    interactiveType: "bitcoin",
+    github: "https://github.com/Jagadamba24"
   },
   bmw: {
-    title: "BMW Sales Analysis & Executive Dashboard",
-    category: "Business Intelligence & Analytics",
     icon: "📊",
-    description: "An interactive executive business intelligence dashboard analyzing multi-year BMW vehicle sales metrics, customer demographics, trim popularity, and regional market profitability.",
-    problem: "Disparate automotive sales spreadsheets provided no cohesive visibility into model performance, inventory velocity, or geographical revenue distribution.",
-    solution: "Designed a relational data model in Power BI, created custom DAX KPIs (YoY Revenue Growth, Average Transaction Value, Model Contribution %), and built dynamic drill-through filters for region, year, and fuel type.",
-    outcomes: [
-      "Real-time visual monitoring of high-margin EV and SUV series versus traditional sedans.",
-      "Interactive slicing by regional dealerships allowing executive trend forecasting.",
-      "Automated summary reports replacing manual Excel reporting tasks."
+    title: "BMW Sales Analysis & Executive KPI Dashboard",
+    category: "Business Intelligence & Executive Analytics",
+    tags: ["Power BI", "DAX", "Data Modeling", "MS Excel", "KPIs"],
+    problem: "Global automotive leadership requires instant, multi-dimensional clarity on electric vehicle (BEV) adoption rates, regional sales variances, and dealership performance.",
+    solution: "Designed an interactive executive dashboard in Power BI backed by dynamic DAX measures that calculates YoY delivery growth, top vehicle series, and regional market shares.",
+    architecture: [
+      "Data Model: Star schema linking dealership geography, transaction timelines, and vehicle specifications.",
+      "DAX Measures: Dynamic revenue formulas, YoY delivery variances, and profit margin analysis.",
+      "Executive UX: Custom color-tailored KPIs with intuitive cross-filtering across continents and vehicle types."
     ],
-    techStack: ["Power BI", "DAX", "Microsoft Excel", "Data Modeling", "KPI Architecture", "Data Cleaning"],
-    interactiveType: "sales-kpi"
+    interactiveType: "bmw",
+    github: "https://github.com/Jagadamba24"
   }
 };
 
-function initProjectModals() {
+function initProjectModal() {
   const modalOverlay = document.getElementById('project-modal');
   const modalBody = document.getElementById('modal-dynamic-content');
   const closeBtn = document.getElementById('modal-close-btn');
-  const viewDetailBtns = document.querySelectorAll('.view-project-btn');
+  const viewDetailBtns = document.querySelectorAll('.open-modal-btn');
 
   viewDetailBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -197,7 +263,6 @@ function initProjectModals() {
       modalOverlay.classList.add('active');
       document.body.style.overflow = 'hidden';
 
-      // Re-initialize demo widgets inside the modal
       setupDemoWidget(project.interactiveType);
     });
   });
@@ -225,316 +290,200 @@ function generateModalHTML(project) {
     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
       <span style="font-size: 2.2rem; background: var(--bg-secondary); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">${project.icon}</span>
       <div>
-        <span class="section-tag" style="margin-bottom: 4px; font-size: 0.75rem;">${project.category}</span>
-        <h3 style="font-size: 1.5rem; line-height: 1.25;">${project.title}</h3>
+        <span style="font-size: 0.78rem; font-weight: 700; color: var(--accent-secondary); text-transform: uppercase;">${project.category}</span>
+        <h3 style="font-size: 1.35rem; margin: 4px 0 0 0; color: var(--text-primary);">${project.title}</h3>
       </div>
     </div>
-    
-    <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.7;">${project.description}</p>
-    
-    <div style="background: var(--bg-secondary); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); margin-bottom: 20px;">
-      <h4 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-primary); margin-bottom: 6px;">Problem Statement</h4>
-      <p style="font-size: 0.92rem; margin-bottom: 14px; color: var(--text-primary);">${project.problem}</p>
-      
-      <h4 style="font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-secondary); margin-bottom: 6px;">Engineering Solution</h4>
-      <p style="font-size: 0.92rem; color: var(--text-primary);">${project.solution}</p>
+
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+      ${project.tags.map(t => `<span class="tech-tag">${t}</span>`).join('')}
     </div>
 
-    <h4 style="font-size: 1.05rem; margin-bottom: 10px;">Key Outcomes & Impact</h4>
-    <ul style="list-style: none; margin-bottom: 20px;">
-      ${project.outcomes.map(item => `
-        <li style="font-size: 0.9rem; color: var(--text-secondary); position: relative; padding-left: 20px; margin-bottom: 8px;">
-          <span style="position: absolute; left: 0; color: var(--success); font-weight: bold;">✔</span> ${item}
-        </li>
-      `).join('')}
-    </ul>
-
-    <h4 style="font-size: 0.95rem; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Technologies Used</h4>
-    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
-      ${project.techStack.map(t => `<span class="tech-tag" style="background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-primary); font-size: 0.82rem; padding: 6px 12px;">${t}</span>`).join('')}
+    <div style="margin-bottom: 18px;">
+      <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-primary);">Problem Statement</h4>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">${project.problem}</p>
     </div>
 
-    <!-- Live Interactive Simulation Sandbox -->
-    <div class="demo-interactive-widget" id="demo-widget-container">
-      <!-- Injected via setupDemoWidget -->
+    <div style="margin-bottom: 18px;">
+      <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-secondary);">Solution & Methodology</h4>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">${project.solution}</p>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary);">Technical Highlights</h4>
+      <ul style="padding-left: 18px; font-size: 0.88rem; color: var(--text-muted); line-height: 1.7;">
+        ${project.architecture.map(a => `<li>${a}</li>`).join('')}
+      </ul>
+    </div>
+
+    <div id="interactive-demo-container">
+      <!-- Injected Interactive Widget -->
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+      <a href="${project.github}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+        <span>View Code on GitHub</span>
+      </a>
+      <button class="btn btn-primary btn-sm" onclick="document.getElementById('project-modal').classList.remove('active'); document.body.style.overflow='';">
+        <span>Done</span>
+      </button>
     </div>
   `;
 }
 
-/* =========================================================
-   5. INTERACTIVE LIVE SIMULATION WIDGETS
-   ========================================================= */
-function initInteractiveSimulations() {
-  // Helpers available for modal
-}
-
 function setupDemoWidget(type) {
-  const container = document.getElementById('demo-widget-container');
+  const container = document.getElementById('interactive-demo-container');
   if (!container) return;
 
-  if (type === 'atm-slider') {
+  if (type === 'atm') {
     container.innerHTML = `
-      <div class="widget-title">
-        <span>⚡ Interactive ML Demand Simulator</span>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
-        Adjust the parameters below to see how the model dynamically recalculates predicted cash requirement for ATM Unit #402.
-      </p>
-      <div class="widget-control-row">
-        <div class="widget-slider-label">
-          <span>Day of Week / Traffic</span>
-          <span id="day-val" style="color: var(--accent-primary);">Friday (High Peak)</span>
+      <div class="demo-interactive-widget">
+        <div class="widget-title">
+          <span>⚡</span>
+          <span>Live ML Demand Simulator</span>
         </div>
-        <input type="range" class="widget-slider" id="traffic-slider" min="1" max="7" value="5">
-      </div>
-      <div class="widget-control-row">
-        <div class="widget-slider-label">
-          <span>Nearby Holiday / Payday Event</span>
-          <span id="holiday-val" style="color: var(--accent-secondary);">Yes (+40%)</span>
+        <div class="widget-control-row">
+          <label><span>Day of the Week:</span> <span id="atm-day-val" style="color: var(--accent-primary); font-weight: 700;">Saturday</span></label>
+          <input type="range" min="1" max="7" value="6" id="atm-day-slider" class="widget-slider">
         </div>
-        <input type="range" class="widget-slider" id="holiday-slider" min="0" max="1" value="1">
-      </div>
-      <div class="widget-result-box">
-        <div>
-          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Model Forecasted Dispense</div>
-          <div style="font-size: 1.4rem; font-weight: 800; color: var(--success);" id="atm-prediction-out">₹ 4,85,000</div>
+        <div class="widget-control-row">
+          <label><span>Nearby Bank Holiday:</span> <span id="atm-holiday-val" style="color: var(--accent-secondary); font-weight: 700;">Yes</span></label>
+          <input type="range" min="0" max="1" value="1" id="atm-holiday-slider" class="widget-slider">
         </div>
-        <div style="text-align: right;">
-          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted);">Confidence Band</div>
-          <div style="font-size: 0.95rem; font-weight: 700; color: var(--accent-primary);">96.4% R² Score</div>
+        <div class="widget-result-box">
+          <div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Predicted Cash Required</div>
+            <div class="widget-kpi-val" id="atm-pred-cash">₹ 4,85,000</div>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-size: 0.74rem; background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); padding: 4px 10px; border-radius: 9999px; font-weight: 700;">Model Confidence: 94.2%</span>
+          </div>
         </div>
       </div>
     `;
 
-    const trafficSlider = document.getElementById('traffic-slider');
-    const holidaySlider = document.getElementById('holiday-slider');
-    const dayVal = document.getElementById('day-val');
-    const holidayVal = document.getElementById('holiday-val');
-    const predictionOut = document.getElementById('atm-prediction-out');
+    const daySlider = document.getElementById('atm-day-slider');
+    const holSlider = document.getElementById('atm-holiday-slider');
+    const dayVal = document.getElementById('atm-day-val');
+    const holVal = document.getElementById('atm-holiday-val');
+    const predCash = document.getElementById('atm-pred-cash');
 
-    const days = ['Monday (Low)', 'Tuesday (Standard)', 'Wednesday (Standard)', 'Thursday (Moderate)', 'Friday (High Peak)', 'Saturday (Weekend Surge)', 'Sunday (Standard)'];
-    const baseAmounts = [180000, 210000, 230000, 270000, 350000, 390000, 260000];
+    const days = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     function updateAtm() {
-      const idx = parseInt(trafficSlider.value) - 1;
-      const hasHoliday = parseInt(holidaySlider.value) === 1;
+      const d = parseInt(daySlider.value);
+      const h = parseInt(holSlider.value);
+      dayVal.textContent = days[d];
+      holVal.textContent = h === 1 ? 'Yes' : 'No';
 
-      dayVal.textContent = days[idx];
-      holidayVal.textContent = hasHoliday ? 'Yes (+40%)' : 'No (Normal)';
+      let base = 210000;
+      if (d === 5) base += 90000;
+      if (d === 6) base += 170000;
+      if (d === 7) base += 130000;
+      if (h === 1) base += 105000;
 
-      let amount = baseAmounts[idx];
-      if (hasHoliday) amount = Math.round(amount * 1.38);
-
-      predictionOut.textContent = `₹ ${amount.toLocaleString('en-IN')}`;
+      predCash.textContent = `₹ ${base.toLocaleString('en-IN')}`;
     }
 
-    trafficSlider.addEventListener('input', updateAtm);
-    holidaySlider.addEventListener('input', updateAtm);
-  } else if (type === 'crypto-verify') {
+    daySlider.addEventListener('input', updateAtm);
+    holSlider.addEventListener('input', updateAtm);
+  } else if (type === 'bitcoin') {
     container.innerHTML = `
-      <div class="widget-title">
-        <span>⚡ Cryptographic Double-Spend Validator Sandbox</span>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
-        Simulate an incoming transaction verification against the active ledger state.
-      </p>
-      <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
-        <button class="btn btn-sm btn-outline" id="btn-test-valid" style="flex: 1;">Test Valid UTXO</button>
-        <button class="btn btn-sm btn-outline" id="btn-test-double" style="flex: 1; border-color: #ef4444; color: #ef4444;">Simulate Double-Spend Attack</button>
-      </div>
-      <div class="widget-result-box" id="crypto-result-box" style="display: block;">
-        <div style="font-family: monospace; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;" id="crypto-hash">
-          TX_HASH: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069
+      <div class="demo-interactive-widget">
+        <div class="widget-title">
+          <span>🔒</span>
+          <span>Blockchain Double-Spend Prevention Sandbox</span>
         </div>
-        <div style="font-weight: 700; color: var(--success);" id="crypto-status">
-          STATUS: ✔ VALID TRANSACTION — UTXO Unspent & Cryptographically Signed
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+          <button class="btn btn-sm btn-outline" id="btn-valid-tx" style="flex: 1;">Broadcast Valid TX</button>
+          <button class="btn btn-sm btn-secondary" id="btn-double-tx" style="flex: 1; border-color: rgba(239, 68, 68, 0.4);">Inject Double-Spend</button>
+        </div>
+        <div id="crypto-terminal" style="background: #020617; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; font-family: var(--font-mono); font-size: 0.78rem; min-height: 80px; color: var(--accent-secondary);">
+          Ready. Click a button to test mempool verification algorithms.
         </div>
       </div>
     `;
 
-    const btnValid = document.getElementById('btn-test-valid');
-    const btnDouble = document.getElementById('btn-test-double');
-    const cryptoHash = document.getElementById('crypto-hash');
-    const cryptoStatus = document.getElementById('crypto-status');
-    const resultBox = document.getElementById('crypto-result-box');
+    const term = document.getElementById('crypto-terminal');
+    const btnValid = document.getElementById('btn-valid-tx');
+    const btnDouble = document.getElementById('btn-double-tx');
 
     btnValid.addEventListener('click', () => {
-      cryptoHash.textContent = 'TX_HASH: ' + Array.from({length: 64}, () => Math.floor(Math.random()*16).toString(16)).join('');
-      cryptoStatus.textContent = 'STATUS: ✔ VALID TRANSACTION — UTXO Unspent & Verified In Block #849,201';
-      cryptoStatus.style.color = 'var(--success)';
-      resultBox.style.borderColor = 'var(--success)';
+      const hash = Math.random().toString(16).substring(2, 10);
+      term.innerHTML = `
+        <span style="color: var(--accent-emerald);">[VERIFIED]</span> Transaction Hash: 0000${hash}a9b...<br>
+        ✓ Input UTXO: #4192 (0.84 BTC) found in unspent pool.<br>
+        ✓ Digital signature validated with Secp256k1.<br>
+        <span style="color: #60a5fa;">Consensus: Block added to ledger.</span>
+      `;
     });
 
     btnDouble.addEventListener('click', () => {
-      cryptoHash.textContent = 'TX_HASH: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-      cryptoStatus.textContent = 'STATUS: 🛑 BLOCKED! DOUBLE-SPENDING DETECTED — UTXO Already Spent In Prior Block';
-      cryptoStatus.style.color = '#ef4444';
-      resultBox.style.borderColor = '#ef4444';
+      term.innerHTML = `
+        <span style="color: #ef4444; font-weight: 700;">[DOUBLE-SPEND DETECTED]</span><br>
+        ✗ UTXO #4192 was already claimed in previous block #842104.<br>
+        ✗ Node consensus rejects conflicting signature.<br>
+        <span style="color: #fbbf24;">Action: Malicious transaction discarded from mempool.</span>
+      `;
     });
-  } else if (type === 'sales-kpi') {
+  } else if (type === 'bmw') {
     container.innerHTML = `
-      <div class="widget-title">
-        <span>⚡ Interactive Power BI KPI Explorer</span>
-      </div>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
-        Filter by region to observe real-time aggregated sales metrics and best-selling model segment.
-      </p>
-      <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-        <button class="btn btn-sm btn-outline active-kpi-btn" data-reg="global" style="flex: 1; padding: 6px;">Global</button>
-        <button class="btn btn-sm btn-outline" data-reg="na" style="flex: 1; padding: 6px;">North America</button>
-        <button class="btn btn-sm btn-outline" data-reg="eu" style="flex: 1; padding: 6px;">Europe</button>
-        <button class="btn btn-sm btn-outline" data-reg="apac" style="flex: 1; padding: 6px;">Asia-Pacific</button>
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Total Units Delivered</div>
-          <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-primary);" id="bmw-units">2,555,341</div>
+      <div class="demo-interactive-widget">
+        <div class="widget-title">
+          <span>📈</span>
+          <span>Power BI Executive KPI Explorer</span>
         </div>
-        <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Top Performing Segment</div>
-          <div style="font-size: 1.1rem; font-weight: 800; color: var(--accent-secondary);" id="bmw-segment">BMW X-Series (SUV)</div>
+        <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+          <button class="btn btn-sm btn-outline kpi-filter-btn active" data-market="global">Global</button>
+          <button class="btn btn-sm btn-outline kpi-filter-btn" data-market="na">North America</button>
+          <button class="btn btn-sm btn-outline kpi-filter-btn" data-market="eu">Europe</button>
+          <button class="btn btn-sm btn-outline kpi-filter-btn" data-market="ap">Asia-Pacific</button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--bg-card); padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Delivered Units</div>
+            <div id="kpi-units" style="font-size: 1.1rem; font-weight: 800; color: var(--accent-secondary);">2,555,341</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">BEV Electric %</div>
+            <div id="kpi-bev" style="font-size: 1.1rem; font-weight: 800; color: var(--accent-emerald);">14.7%</div>
+          </div>
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Top Series</div>
+            <div id="kpi-series" style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">BMW 3 &amp; 4 Series</div>
+          </div>
         </div>
       </div>
     `;
 
-    const regData = {
-      global: { units: '2,555,341 Units', segment: 'BMW X-Series (SUV)' },
-      na: { units: '392,246 Units', segment: 'BMW X5 & 3 Series' },
-      eu: { units: '942,805 Units', segment: 'BMW i4 Electric & 3er' },
-      apac: { units: '1,012,490 Units', segment: 'BMW 5 Series & X3' }
+    const data = {
+      global: { units: "2,555,341", bev: "14.7%", series: "BMW 3 & 4 Series" },
+      na: { units: "395,741", bev: "12.5%", series: "BMW X5 / X7 SUVs" },
+      eu: { units: "942,805", bev: "22.3%", series: "BMW i4 & iX1" },
+      ap: { units: "1,012,410", bev: "15.1%", series: "BMW 5 Series LWB" }
     };
 
-    const kpiBtns = container.querySelectorAll('[data-reg]');
-    const unitsEl = document.getElementById('bmw-units');
-    const segmentEl = document.getElementById('bmw-segment');
+    const filterBtns = container.querySelectorAll('.kpi-filter-btn');
+    const kpiUnits = document.getElementById('kpi-units');
+    const kpiBev = document.getElementById('kpi-bev');
+    const kpiSeries = document.getElementById('kpi-series');
 
-    kpiBtns.forEach(b => {
-      b.addEventListener('click', () => {
-        kpiBtns.forEach(btn => {
-          btn.style.background = 'transparent';
-          btn.style.color = 'var(--text-primary)';
-          btn.style.borderColor = 'var(--border-subtle)';
-        });
-        b.style.background = 'var(--badge-bg)';
-        b.style.color = 'var(--accent-primary)';
-        b.style.borderColor = 'var(--accent-primary)';
-
-        const reg = b.getAttribute('data-reg');
-        if (regData[reg]) {
-          unitsEl.textContent = regData[reg].units;
-          segmentEl.textContent = regData[reg].segment;
-        }
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const m = btn.getAttribute('data-market');
+        kpiUnits.textContent = data[m].units;
+        kpiBev.textContent = data[m].bev;
+        kpiSeries.textContent = data[m].series;
       });
     });
   }
 }
 
-/* =========================================================
-   6. CONTACT INTERACTIONS (Copy & Form Simulation)
-   ========================================================= */
-function initContactInteractions() {
-  const copyBtns = document.querySelectorAll('.copy-btn');
-  const toast = document.getElementById('toast-msg');
-
-  copyBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const textToCopy = btn.getAttribute('data-copy');
-      if (!textToCopy) return;
-
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast(`Copied "${textToCopy}" to clipboard!`);
-      }).catch(() => {
-        // Fallback
-        const tempInput = document.createElement('input');
-        tempInput.value = textToCopy;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        showToast(`Copied to clipboard!`);
-      });
-    });
-  });
-
-  function showToast(message) {
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.add('show');
-    setTimeout(() => {
-      toast.classList.remove('show');
-    }, 2800);
-  }
-
-  // Interactive Contact Form Handling
-  const contactForm = document.getElementById('portfolio-contact-form');
-  const formStatus = document.getElementById('form-status');
-
-  if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = document.getElementById('contact-name').value.trim();
-      const email = document.getElementById('contact-email').value.trim();
-      const message = document.getElementById('contact-message').value.trim();
-
-      if (!name || !email || !message) {
-        alert('Please fill out all required fields.');
-        return;
-      }
-
-      // Show immediate feedback
-      if (formStatus) {
-        formStatus.textContent = `Thank you, ${name}! Your message has been prepared. Opening your default mail client...`;
-        formStatus.classList.add('success');
-      }
-
-      // Prepare mailto link for seamless local response
-      const mailtoUrl = `mailto:jyothinaayak24@gmail.com?subject=${encodeURIComponent('Inquiry from ' + name + ' via Portfolio')}&body=${encodeURIComponent(message + '\n\nFrom: ' + name + ' (' + email + ')')}`;
-      setTimeout(() => {
-        window.location.href = mailtoUrl;
-      }, 1000);
-
-      contactForm.reset();
-    });
-  }
-}
-
-/* =========================================================
-   7. SCROLL EFFECTS & REVEAL ANIMATIONS
-   ========================================================= */
-function initScrollEffects() {
-  const scrollTopBtn = document.getElementById('scroll-top-btn');
-
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 400) {
-      if (scrollTopBtn) scrollTopBtn.classList.add('visible');
-    } else {
-      if (scrollTopBtn) scrollTopBtn.classList.remove('visible');
-    }
-  });
-
-  if (scrollTopBtn) {
-    scrollTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  }
-
-  // Reveal on scroll elements
-  const revealElements = document.querySelectorAll('.reveal-on-scroll');
-  const revealObserver = new IntersectionObserver((entries, obs) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-revealed');
-        obs.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-
-  revealElements.forEach(el => revealObserver.observe(el));
-}
-
-/* =========================================================
-   8. RESUME VIEWER MODAL
-   ========================================================= */
+/* ==========================================================================
+   7. Resume Viewer Modal
+   ========================================================================== */
 function initResumeModal() {
   const resumeModal = document.getElementById('resume-modal');
   const closeBtn = document.getElementById('resume-modal-close-btn');
@@ -555,7 +504,7 @@ function initResumeModal() {
   triggers.forEach(btn => {
     btn.addEventListener('click', (e) => {
       // On desktop / tablet screens (> 768px), open embedded modal preview
-      // On small mobile screens (<= 768px), allow default behavior to open PDF natively in a new browser tab
+      // On small mobile screens (<= 768px), allow default behavior to open PDF in a new browser tab
       if (window.innerWidth > 768) {
         e.preventDefault();
         openResume();
@@ -576,3 +525,91 @@ function initResumeModal() {
   });
 }
 
+/* ==========================================================================
+   8. Clipboard Copy Functionality
+   ========================================================================== */
+function initClipboardCopy() {
+  const copyBtns = document.querySelectorAll('.copy-btn');
+
+  copyBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const textToCopy = btn.getAttribute('data-copy');
+      if (!textToCopy) return;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = `<span>Copied!</span>`;
+        showToast(`Copied "${textToCopy}" to clipboard!`);
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+        }, 2000);
+      }).catch(() => {
+        showToast(`Selected: ${textToCopy}`);
+      });
+    });
+  });
+}
+
+/* ==========================================================================
+   9. Contact Form Validation
+   ========================================================================== */
+function initContactForm() {
+  const form = document.getElementById('portfolio-contact-form');
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('contact-name').value.trim();
+    const email = document.getElementById('contact-email').value.trim();
+    const subject = document.getElementById('contact-subject').value.trim();
+    const message = document.getElementById('contact-message').value.trim();
+
+    if (!name || !email || !message) {
+      showToast('Please fill in all required fields.');
+      return;
+    }
+
+    const mailtoUrl = `mailto:jyothinaayak24@gmail.com?subject=${encodeURIComponent(subject || 'Portfolio Inquiry from ' + name)}&body=${encodeURIComponent("Name: " + name + "\nEmail: " + email + "\n\n" + message)}`;
+    window.location.href = mailtoUrl;
+
+    showToast('Opening your email client to deliver message...');
+    form.reset();
+  });
+}
+
+/* ==========================================================================
+   10. Scroll Effects & Floating Scroll-to-Top Button
+   ========================================================================== */
+function initScrollEffects() {
+  const scrollTopBtn = document.getElementById('scroll-top-btn');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) {
+      if (scrollTopBtn) scrollTopBtn.classList.add('visible');
+    } else {
+      if (scrollTopBtn) scrollTopBtn.classList.remove('visible');
+    }
+  });
+
+  if (scrollTopBtn) {
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+}
+
+/* ==========================================================================
+   Global Toast Notification
+   ========================================================================== */
+function showToast(message) {
+  const toast = document.getElementById('toast-msg');
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.classList.add('show');
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2600);
+}
