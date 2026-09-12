@@ -1424,6 +1424,44 @@ a {
   z-index: 2;
 }
 
+.project-live-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #34d399;
+  z-index: 2;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.project-live-tag:hover {
+  background: rgba(16, 185, 129, 0.32);
+  border-color: var(--accent-emerald);
+  transform: translateY(-1px);
+  color: #ffffff;
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.35);
+}
+
+.live-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 8px var(--accent-emerald);
+  animation: pulse-dot 2s infinite;
+}
+
 /* Vector Mockups in Banners */
 .project-mockup-graphic {
   width: 85%;

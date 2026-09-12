@@ -212,6 +212,7 @@ const PROJECT_DETAILS = {
       "Deployment Simulation: What-if demand forecasting based on user-selected day of week and nearby banking holiday markers."
     ],
     interactiveType: "atm",
+    liveUrl: "https://atm-cash-demand-forecasting-t6bm.onrender.com/",
     github: "https://github.com/Jagadamba24"
   },
   bitcoin: {
@@ -227,11 +228,12 @@ const PROJECT_DETAILS = {
       "Network Validation: Instant invalidation of conflicting parallel broadcast attempts."
     ],
     interactiveType: "bitcoin",
+    liveUrl: "https://bitcoin-transaction.onrender.com",
     github: "https://github.com/Jagadamba24"
   },
   bmw: {
     icon: "📊",
-    title: "BMW Sales Analysis & Executive KPI Dashboard",
+    title: "BMW Sales Analysis Dashboard",
     category: "Business Intelligence & Executive Analytics",
     tags: ["Power BI", "DAX", "Data Modeling", "MS Excel", "KPIs"],
     problem: "Global automotive leadership requires instant, multi-dimensional clarity on electric vehicle (BEV) adoption rates, regional sales variances, and dealership performance.",
@@ -242,6 +244,7 @@ const PROJECT_DETAILS = {
       "Executive UX: Custom color-tailored KPIs with intuitive cross-filtering across continents and vehicle types."
     ],
     interactiveType: "bmw",
+    liveUrl: "https://bmw-sales-analysis-z82y.onrender.com/",
     github: "https://github.com/Jagadamba24"
   }
 };
@@ -286,6 +289,26 @@ function initProjectModal() {
 }
 
 function generateModalHTML(project) {
+  const liveSection = project.liveUrl ? `
+    <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.28); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="live-status-dot" style="width: 8px; height: 8px;"></span>
+        <div>
+          <span style="font-size: 0.88rem; color: var(--text-primary); font-weight: 700; display: block;">Live Deployed Application</span>
+          <span style="font-size: 0.76rem; color: var(--accent-emerald);">Active web application</span>
+        </div>
+      </div>
+      <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" style="box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" x2="21" y1="14" y2="3" />
+        </svg>
+        <span>Open Live App ↗</span>
+      </a>
+    </div>
+  ` : '';
+
   return `
     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
       <span style="font-size: 2.2rem; background: var(--bg-secondary); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">${project.icon}</span>
@@ -295,9 +318,11 @@ function generateModalHTML(project) {
       </div>
     </div>
 
-    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px;">
+    <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px;">
       ${project.tags.map(t => `<span class="tech-tag">${t}</span>`).join('')}
     </div>
+
+    ${liveSection}
 
     <div style="margin-bottom: 18px;">
       <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; color: var(--accent-primary);">Problem Statement</h4>
@@ -320,12 +345,25 @@ function generateModalHTML(project) {
       <!-- Injected Interactive Widget -->
     </div>
 
-    <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+    <div style="display: flex; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; align-items: center;">
+      ${project.liveUrl ? `
+        <a href="${project.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" x2="21" y1="14" y2="3" />
+          </svg>
+          <span>Open Live App</span>
+        </a>
+      ` : ''}
       <a href="${project.github}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
-        <span>View Code on GitHub</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z" />
+        </svg>
+        <span>GitHub</span>
       </a>
-      <button class="btn btn-primary btn-sm" onclick="document.getElementById('project-modal').classList.remove('active'); document.body.style.overflow='';">
-        <span>Done</span>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('project-modal').classList.remove('active'); document.body.style.overflow='';">
+        <span>Close</span>
       </button>
     </div>
   `;
